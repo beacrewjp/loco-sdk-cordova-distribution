@@ -1,0 +1,33 @@
+repositories {
+    maven {
+        url 'https://github.com/beacrewjp/loco-sdk-android-distribution/raw/master/maven/maven-repo'
+    }
+}
+
+
+dependencies {
+    
+    implementation 'jp.beacrew:loco:2.2.0@aar'
+    implementation('org.altbeacon:android-beacon-library:2.15') {
+        exclude module: 'support-v4'
+    }
+    implementation('com.squareup.okhttp3:okhttp:3.9.0') {
+        exclude module: 'support-v4'
+    }
+
+    implementation('org.eclipse.paho:org.eclipse.paho.client.mqttv3:1.1.1') {
+        exclude module: 'support-v4'
+    }
+    implementation('org.eclipse.paho:org.eclipse.paho.android.service:1.1.1') {
+        exclude module: 'support-v4'
+    }
+    implementation ('com.google.code.gson:gson:2.8.5') {
+        exclude module: 'support-v4'
+    }
+    implementation 'com.android.support:support-v4:27.1.1'
+
+}
+
+cdvPluginPostBuildExtras.add({
+    apply plugin: 'realm-android'
+})

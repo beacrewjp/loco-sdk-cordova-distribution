@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<plugin id="cordova-plugin-loco" version="1.0.0" xmlns="http://apache.org/cordova/ns/plugins/1.0" xmlns:android="http://schemas.android.com/apk/res/android">
+    <name>cordova-plugin-loco</name>
+    <description>Cordova plugin for BeacrewLoco.</description>
+    <author>Beacrew Inc.</author>
+    <keywords>beacrew, loco, sdk</keywords>
+    <license>Private</license>
+    <engines>
+        <engine name="cordova-android" version=">5.0.0"/>
+    </engines>
+
+    <js-module src="www/locosdk.js" name="loco">
+        <clobbers target="loco"/>
+    </js-module>
+    
+	<platform name="ios">
+	    <config-file target="config.xml" parent="/*">
+	        <feature name="beacrewloco">
+	            <param name="ios-package" value="CDVBeacrewLoco"/>
+	        </feature>
+	    </config-file>
+	    
+	    <header-file src="src/ios/CDVBeacrewLoco.h" />
+	    <source-file src="src/ios/CDVBeacrewLoco.m" />
+
+	    <framework src="src/ios/BeacrewLoco.framework" custom="true" embed="true" />
+	    <framework src="src/ios/MQTTClient.framework" custom="true" embed="true" />
+	    <framework src="src/ios/Realm.framework" custom="true" embed="true" />
+	
+	    <framework src="SystemConfiguration.framework"/>
+	    <framework src="CoreLocation.framework"/>
+	    <framework src="CoreBluetooth.framework"/>
+	    
+		<config-file target="*-Info.plist" parent="NSLocationAlwaysAndWhenInUseUsageDescription">
+			<string>Always and When In Use.</string>
+		</config-file>
+		<config-file target="*-Info.plist" parent="NSLocationAlwaysUsageDescription">
+			<string>Always.</string>
+		</config-file>
+		<config-file target="*-Info.plist" parent="NSLocationWhenInUseUsageDescription">
+			<string>When In Use.</string>
+		</config-file>
+	</platform>
+
+    <platform name="android">
+        <hook type="after_plugin_install" src="scripts/android/after_plugin_install.js" />
+        <hook type="before_plugin_uninstall" src="scripts/android/before_plugin_uninstall.js" />
+        <config-file target="res/xml/config.xml" parent="/*">
+            <feature name="beacrewloco">
+                <param name="android-package" value="plugin.locosdk.LocoSDK"/>
+            </feature>
+        </config-file>
+        <config-file target="AndroidManifest.xml" parent="/manifest">
+            <uses-permission android:name="android.permission.INTERNET" />
+            <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+            <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+            <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+            <uses-permission android:name="android.permission.BLUETOOTH" />
+            <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
+        </config-file>
+        <source-file src="src/android/LocoSDK.java" target-dir="src/plugin/locosdk/"/>
+        <framework src="src/android/build-extras.gradle" custom="true" type="gradleReference"/>
+    </platform>
+
+</plugin>

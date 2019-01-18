@@ -1,0 +1,27 @@
+{
+  "name": "cordova-plugin-loco",
+  "version": "1.0.0",
+  "description": "BeacrewLoco Cordova plugin.",
+  "cordova": {
+    "id": "cordova-plugin-loco",
+    "platforms": [
+      "ios",
+      "android"
+    ]
+  },
+  "keywords": [
+    "beacrew",
+    "loco",
+    "ecosystem:cordova",
+    "cordova-ios",
+    "cordova-android"
+  ],
+  "engines": [
+    {
+      "name": "cordova-android",
+      "version": ">5.0.0"
+    }
+  ],
+  "author": "Beacrew Inc.",
+  "license": "private"
+}
