@@ -9,8 +9,8 @@
         <engine name="cordova-android" version=">5.0.0"/>
     </engines>
 
-    <js-module src="www/locosdk.js" name="loco">
-        <clobbers target="loco"/>
+    <js-module src="www/locoManager.js" name="locoManager">
+        <clobbers target="locoManager"/>
     </js-module>
     
 	<platform name="ios">

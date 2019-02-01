@@ -18,16 +18,17 @@ import jp.beacrew.loco.BCLCluster;
 import jp.beacrew.loco.BCLError;
 import jp.beacrew.loco.BCLManager;
 import jp.beacrew.loco.BCLManagerEventListener;
+import jp.beacrew.loco.BCLParam;
 import jp.beacrew.loco.BCLRegion;
 import jp.beacrew.loco.BCLState;
 
 public class LocoSDK extends CordovaPlugin implements BCLManagerEventListener{
 
-    private BCLManager mBCLManager;
+    private BCLManager mManager;
     private CallbackContext mCallbackContext;
     private static final int REQUEST_CODE_ENABLE_PERMISSION = 88008800;
-    private String ApiKey;
-    private boolean autoScan;
+    private String mApiKey;
+    private boolean mAutoScan;
 
     public void initialize(CordovaInterface cordova, CordovaWebView webView) {
         super.initialize(cordova, webView);
@@ -35,13 +36,10 @@ public class LocoSDK extends CordovaPlugin implements BCLManagerEventListener{
 
     @Override
     public boolean execute(String action, JSONArray data, CallbackContext callbackContext) throws JSONException {
-
-        
         if (action.equals("initWithAPIKey")) {
             mCallbackContext = callbackContext;
-            ApiKey = data.getString(0);
-            autoScan = data.getBoolean(1);
-
+            mApiKey = data.getString(0);
+            mAutoScan = data.getBoolean(1);
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 String[] permissions = {
                         Manifest.permission.ACCESS_COARSE_LOCATION,
@@ -55,16 +53,12 @@ public class LocoSDK extends CordovaPlugin implements BCLManagerEventListener{
                     cordova.requestPermissions(this, REQUEST_CODE_ENABLE_PERMISSION, permissions);
                 }
             } else {
-
                 initWithApiKey();
             }
-
         } else if (action.equals("scanStart")) {
             scanStart();
-
         } else if (action.equals("scanStop")) {
             scanStop();
-
         } else if (action.equals("getDeviceId")) {
             getDeviceId(callbackContext);
         } else if(action.equals("getNearestBeaconId")) {
@@ -89,117 +83,52 @@ public class LocoSDK extends CordovaPlugin implements BCLManagerEventListener{
     }
 
     private void scanStart() {
-        if (mBCLManager != null) {
-            mBCLManager.scanStart();
+        if (mManager != null) {
+            mManager.scanStart();
         }
     }
 
     private void scanStop() {
-        if (mBCLManager != null) {
-            mBCLManager.scanStop();
+        if (mManager != null) {
+            mManager.scanStop();
         }
     }
+    
     private void getDeviceId(CallbackContext callbackContext) {
-        String ret = mBCLManager.getDeviceId();
+        String ret = mManager.getDeviceId();
         PluginResult result = new PluginResult(PluginResult.Status.OK, ret);
        
         callbackContext.sendPluginResult(result);
     }
 
     private void getNearestBeaconId(CallbackContext callbackContext) {
-        String ret = mBCLManager.getNearestBeaconId();
+        String ret = mManager.getNearestBeaconId();
         PluginResult result = new PluginResult(PluginResult.Status.OK, ret);
 
         callbackContext.sendPluginResult(result);
     }
 
     private void getState(CallbackContext callbackContext) {
-        String ret = mBCLManager.getState().toString();
+        String ret = mManager.getState().toString();
         PluginResult result = new PluginResult(PluginResult.Status.OK, ret);
 
         callbackContext.sendPluginResult(result);    
     }
 
     private void addEventLog(String key, String value) {
-        mBCLManager.addEventLog(key, value);
+        mManager.addEventLog(key, value);
     }
 
     private void getClusters(CallbackContext callbackContext) {
-        ArrayList<BCLCluster> clusters;
-        clusters = mBCLManager.getClusters();
-        ArrayList<HashMap> clusterList = new ArrayList<>();
-
-        for (int idx = 0; idx < clusters.size(); idx++) {
-            ArrayList<HashMap> beaconsList = new ArrayList<>();
-            HashMap clusterHash = new HashMap<>();
-            BCLCluster cluster = clusters.get(idx);
-            clusterHash.put("clusterId", cluster.getClusterId());
-            clusterHash.put("parentId", cluster.getParentId());
-            clusterHash.put("name", cluster.getName());
-            clusterHash.put("tag", cluster.getType());
-
-
-            //Beaconの要素
-            for (BCLBeacon bclBeacon : cluster.getBeacons()) {
-                ArrayList<HashMap> actionsList = new ArrayList<>();
-                HashMap beaconsHash = new HashMap();
-
-                beaconsHash.put("beaconId", bclBeacon.getBeaconId());
-                beaconsHash.put("uuid", bclBeacon.getUuid());
-                beaconsHash.put("major", bclBeacon.getMajor());
-                beaconsHash.put("minor", bclBeacon.getMinor());
-
-                //Actionの要素
-                for (BCLAction bclAction : bclBeacon.getActions()) {
-                    ArrayList<HashMap> paramList = new ArrayList<>();
-                    HashMap actionHash = new HashMap();
-
-                    actionHash.put("actionId", bclAction.getActionId());
-                    actionHash.put("name", bclAction.getName());
-                    actionHash.put("uri", bclAction.getUri());
-                    actionHash.put("interval", bclAction.getInterval());
-
-                    for (int idx2 = 0; idx2 < bclAction.getParams().size(); idx2++) {
-                        HashMap<String, String> paramHash = new HashMap<>();
-
-                        paramHash.put("key", bclAction.getParams().get(idx2).getKey());
-                        paramHash.put("value", bclAction.getParams().get(idx2).getValue());
-
-                        paramList.add(paramHash);
-                    }
-
-                    actionHash.put("params", paramList);
-                    actionsList.add(actionHash);
-
-                }
-
-                beaconsHash.put("actions", actionsList);
-                beaconsHash.put("name", bclBeacon.getName());
-                beaconsHash.put("localName", bclBeacon.getLocalName());
-                beaconsHash.put("model", bclBeacon.getBeaconModel());
-                beaconsHash.put("manufacturer", bclBeacon.getBeaconManufacturer());
-
-                beaconsHash.put("moduleId", bclBeacon.getModuleId());
-                beaconsHash.put("x", bclBeacon.getBeaconX());
-                beaconsHash.put("y", bclBeacon.getBeaconY());
-                beaconsHash.put("height", bclBeacon.getBeaconH());
-                beaconsHash.put("rssi", bclBeacon.getRssi());
-                beaconsHash.put("txPower", bclBeacon.getTxPower());
-
-                beaconsList.add(beaconsHash);
-            }
-
-            clusterHash.put("beacons", beaconsList);
-            clusterHash.put("image", cluster.getImage());
-
-            clusterList.add(clusterHash);
-        }
-        //Json
-        HashMap clusterMap = new HashMap();
-        clusterMap.put("clusters", clusterList);
-
+        ArrayList<BCLCluster> clusters = mManager.getClusters();
+        JSONArray array = new JSONArray();
         try {
-            PluginResult result = new PluginResult(PluginResult.Status.OK, new JSONObject(clusterMap).toString(4));
+            for (BCLCluster cluster : clusters) {
+                array.put(clusterToJSONObject(cluster));
+            }
+            JSONObject json = new JSONObject();
+            json.put("clusters", array);
+            PluginResult result = new PluginResult(PluginResult.Status.OK, json);
             callbackContext.sendPluginResult(result);
         } catch (JSONException e) {
             e.printStackTrace();
@@ -207,63 +136,15 @@ public class LocoSDK extends CordovaPlugin implements BCLManagerEventListener{
     }
 
     private void getBeacons (CallbackContext callbackContext) {
-        ArrayList<BCLBeacon> beacons;
-        beacons = mBCLManager.getBeacons();
-
-        ArrayList<HashMap> beaconList = new ArrayList<>();
-
-        for (int idx = 0; idx < beacons.size(); idx++) {
-            ArrayList<HashMap> actionsList = new ArrayList<>();
-            HashMap beaconHash = new HashMap<>();
-            BCLBeacon beacon = beacons.get(idx);
-            beaconHash.put("beaconId", beacon.getBeaconId());
-            beaconHash.put("uuid", beacon.getUuid());
-            beaconHash.put("major", beacon.getMajor());
-            beaconHash.put("minor", beacon.getMinor());
-
-
-            //Actionの要素
-            for (BCLAction bclAction : beacon.getActions()) {
-                ArrayList<HashMap> paramList = new ArrayList<>();
-                HashMap actionHash = new HashMap();
-
-                actionHash.put("actionId", bclAction.getActionId());
-                actionHash.put("name", bclAction.getName());
-                actionHash.put("uri", bclAction.getUri());
-                actionHash.put("interval", bclAction.getInterval());
-
-                for (int idx2 = 0; idx2 < bclAction.getParams().size(); idx2++) {
-                    HashMap<String, String> paramHash = new HashMap<>();
-
-                    paramHash.put("key", bclAction.getParams().get(idx2).getKey());
-                    paramHash.put("value", bclAction.getParams().get(idx2).getValue());
-
-                    paramList.add(paramHash);
-                }
-
-                actionHash.put("params", paramList);
-                actionsList.add(actionHash);
-
-            }
-
-            beaconHash.put("actions", actionsList);
-            beaconHash.put("name", beacon.getName());
-            beaconHash.put("localName", beacon.getLocalName());
-            beaconHash.put("model", beacon.getBeaconModel());
-            beaconHash.put("manufacturer", beacon.getBeaconManufacturer());
-            beaconHash.put("moduleId", beacon.getModuleId());
-            beaconHash.put("x", beacon.getBeaconX());
-            beaconHash.put("y", beacon.getBeaconY());
-            beaconHash.put("height", beacon.getBeaconH());
-
-            beaconList.add(beaconHash);
-        }
-        //Json
-        HashMap beaconMap = new HashMap();
-        beaconMap.put("beacons", beaconList);
-
+        ArrayList<BCLBeacon> beacons = mManager.getBeacons();
+        JSONArray array = new JSONArray();
         try {
-            PluginResult result = new PluginResult(PluginResult.Status.OK, new JSONObject(beaconMap).toString(4));
+            for (BCLBeacon beacon : beacons) {
+                array.put(beaconToJSONObject(beacon));
+            }
+            JSONObject json = new JSONObject();
+            json.put("beacons", array);
+            PluginResult result = new PluginResult(PluginResult.Status.OK, json);
             callbackContext.sendPluginResult(result);
         } catch (JSONException e) {
             e.printStackTrace();
@@ -271,72 +152,15 @@ public class LocoSDK extends CordovaPlugin implements BCLManagerEventListener{
     }
 
     private void getRegions(CallbackContext callbackContext) {
-        ArrayList<BCLRegion> regions;
-        regions = mBCLManager.getRegions();
-        ArrayList<HashMap> regionList = new ArrayList<>();
-
-        for (int idx = 0; idx < regions.size(); idx++) {
-            ArrayList<HashMap> inActionsList = new ArrayList<>();
-            ArrayList<HashMap> outActionsList = new ArrayList<>();
-            HashMap regionHash = new HashMap<>();
-            BCLRegion region = regions.get(idx);
-            regionHash.put("regionId", region.getRegionId());
-            regionHash.put("type", region.getType());
-            regionHash.put("name", region.getName());
-            regionHash.put("uuid", region.getUuid());
-            regionHash.put("major", region.getMajor());
-            regionHash.put("minor", region.getMinor());
-            regionHash.put("latitude", region.getLatitude());
-            regionHash.put("longitude", region.getLongitude());
-            regionHash.put("radius", region.getRadius());
-
-            for (BCLAction inAction : region.getInAction()) {
-                ArrayList<HashMap> paramList = new ArrayList<>();
-                HashMap actionHash = new HashMap();
-
-                actionHash.put("actionId", inAction.getActionId());
-                actionHash.put("name", inAction.getName());
-                actionHash.put("uri", inAction.getUri());
-                actionHash.put("interval", inAction.getInterval());
-
-                for (int idx2 = 0; idx2 < inAction.getParams().size(); idx2++) {
-                    HashMap<String, String> paramHash = new HashMap<>();
-                    paramHash.put("key", inAction.getParams().get(idx2).getKey());
-                    paramHash.put("value", inAction.getParams().get(idx2).getValue());
-                    paramList.add(paramHash);
-                }
-                actionHash.put("params", paramList);
-                inActionsList.add(actionHash);
-            }
-            regionHash.put("inAction", inActionsList);
-
-            for (BCLAction outAction : region.getOutAction()) {
-                ArrayList<HashMap> paramList = new ArrayList<>();
-                HashMap actionHash = new HashMap();
-
-                actionHash.put("actionId", outAction.getActionId());
-                actionHash.put("name", outAction.getName());
-                actionHash.put("uri", outAction.getUri());
-                actionHash.put("interval", outAction.getInterval());
-
-                for (int idx2 = 0; idx2 < outAction.getParams().size(); idx2++) {
-                    HashMap<String, String> paramHash = new HashMap<>();
-                    paramHash.put("key", outAction.getParams().get(idx2).getKey());
-                    paramHash.put("value", outAction.getParams().get(idx2).getValue());
-                    paramList.add(paramHash);
-                }
-                actionHash.put("params", paramList);
-                outActionsList.add(actionHash);
-            }
-            regionHash.put("outAction", outActionsList);
-            regionList.add(regionHash);
-
-        }
-        //Json
-        HashMap regionMap = new HashMap();
-        regionMap.put("regions", regionList);
+        ArrayList<BCLRegion> regions = mManager.getRegions();
+        JSONArray array = new JSONArray();
         try {
-            PluginResult result = new PluginResult(PluginResult.Status.OK, new JSONObject(regionMap).toString(4));
+            for (BCLRegion region : regions) {
+                array.put(regionToJSONObject(region));
+            }
+            JSONObject json = new JSONObject();
+            json.put("regions", array);
+            PluginResult result = new PluginResult(PluginResult.Status.OK, json);
             callbackContext.sendPluginResult(result);
         } catch (JSONException e) {
             e.printStackTrace();
@@ -344,40 +168,15 @@ public class LocoSDK extends CordovaPlugin implements BCLManagerEventListener{
     }
 
     private void getActions(CallbackContext callbackContext) {
-        ArrayList<BCLAction> actions;
-        actions = mBCLManager.getActions();
-
-        ArrayList<HashMap> actionList = new ArrayList<>();
-
-        for (int idx = 0; idx < actions.size(); idx++) {
-            HashMap actionHash = new HashMap<>();
-            ArrayList<HashMap> paramList = new ArrayList<>();
-
-
-            BCLAction action = actions.get(idx);
-            actionHash.put("actionId", action.getActionId());
-            actionHash.put("name", action.getName());
-            actionHash.put("uri", action.getUri());
-            actionHash.put("interval", action.getInterval());
-
-            for (int idx2 = 0; idx2 < action.getParams().size(); idx2++) {
-                HashMap<String, String> paramHash = new HashMap<>();
-
-                paramHash.put("key", action.getParams().get(idx2).getKey());
-                paramHash.put("value", action.getParams().get(idx2).getValue());
-
-                paramList.add(paramHash);
-            }
-
-            actionHash.put("params", paramList);
-            actionList.add(actionHash);
-        }
-        //Json
-        HashMap actionMap = new HashMap();
-        actionMap.put("actions", actionList);
-
+        ArrayList<BCLAction> actions = mManager.getActions();
+        JSONArray array = new JSONArray();
         try {
-            PluginResult result = new PluginResult(PluginResult.Status.OK, new JSONObject(actionMap).toString(4));
+            for (BCLAction action : actions) {
+                array.put(actionToJSONObject(action));
+            }
+            JSONObject json = new JSONObject();
+            json.put("actions", array);
+            PluginResult result = new PluginResult(PluginResult.Status.OK, json);
             callbackContext.sendPluginResult(result);
         } catch (JSONException e) {
             e.printStackTrace();
@@ -385,105 +184,104 @@ public class LocoSDK extends CordovaPlugin implements BCLManagerEventListener{
     }
 
     @Override
-    public void onStateChange(BCLState bclState) {
-        Log.d("LocoCordova", "onStateChange:" + bclState.toString());
-        //mCallbackContext.success(bclState.toString());
-        JSONObject resultJson = new JSONObject();
+    public void onStateChange(BCLState state) {
+        Log.d("LocoCordova", "onStateChange:" + state.toString());
+        JSONObject json = new JSONObject();
         try {
-            resultJson.put("eventType", "onStateChange");
-            resultJson.put("message", createSendStateJson(bclState));
+            json.put("eventType", "onStateChange");
+            json.put("message", stateToJSONObject(state));
         } catch (JSONException e) {
             e.printStackTrace();
         }
-
-        PluginResult result = new PluginResult(PluginResult.Status.OK, resultJson.toString());
-        result.setKeepCallback(true);
-        mCallbackContext.sendPluginResult(result);
-
-    }
-
-    @Override
-    public void onBeaconDetected(ArrayList<BCLBeacon> arrayList) {
-        JSONObject resultJson = new JSONObject();
-        try {
-            resultJson.put("eventType", "onBeaconDetected");
-            resultJson.put("message", createSendBeaconsJson(arrayList));
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-
-        PluginResult result = new PluginResult(PluginResult.Status.OK, resultJson.toString());
-        result.setKeepCallback(true);
-        mCallbackContext.sendPluginResult(result);
-
-
-    }
-
-    @Override
-    public void onActionDetected(BCLAction bclAction, String s, Object o) {
-        Log.d("LocoCordova", "onActionDetected:" + bclAction.getName());
-        JSONObject resultJson = new JSONObject();
-        try {
-            resultJson.put("eventType", "onActionDetected");
-            resultJson.put("message", createSendActionsJson(bclAction, s, o));
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-
-        PluginResult result = new PluginResult(PluginResult.Status.OK, resultJson.toString());
+        PluginResult result = new PluginResult(PluginResult.Status.OK, json);
         result.setKeepCallback(true);
         mCallbackContext.sendPluginResult(result);
     }
 
     @Override
-    public void onRegionIn(BCLRegion bclRegion) {
-        Log.d("LocoCordova", "onRegionIn:" + bclRegion.getName());
-        JSONObject resultJson = new JSONObject();
+    public void onBeaconDetected(ArrayList<BCLBeacon> beacons) {
+        JSONObject json = new JSONObject();
         try {
-            resultJson.put("eventType", "onRegionIn");
-            resultJson.put("message", createSendRegionJson(bclRegion));
+            json.put("eventType", "onBeaconDetected");
+
+            JSONArray array = new JSONArray();
+            for (BCLBeacon beacon : beacons) {
+                array.put(beaconToJSONObject(beacon));
+            }
+            JSONObject message = new JSONObject();
+            message.put("beacons", array);
+            
+            json.put("message", message);
+                    
         } catch (JSONException e) {
             e.printStackTrace();
         }
-
-        PluginResult result = new PluginResult(PluginResult.Status.OK, resultJson.toString());
+        PluginResult result = new PluginResult(PluginResult.Status.OK, json);
         result.setKeepCallback(true);
         mCallbackContext.sendPluginResult(result);
     }
 
     @Override
-    public void onRegionOut(BCLRegion bclRegion) {
-        Log.d("LocoCordova", "onRegionOut:" + bclRegion.getName());
-        JSONObject resultJson = new JSONObject();
+    public void onActionDetected(BCLAction action, String type, Object source) {
+        Log.d("LocoCordova", "onActionDetected:" + action.getName());
+        JSONObject json = new JSONObject();
         try {
-            resultJson.put("eventType", "onRegionOut");
-            resultJson.put("message", createSendRegionJson(bclRegion));
+            json.put("eventType", "onActionDetected");
+            json.put("message", actionToJSONObject(action, type, source));
         } catch (JSONException e) {
             e.printStackTrace();
         }
-
-        PluginResult result = new PluginResult(PluginResult.Status.OK, resultJson.toString());
+        PluginResult result = new PluginResult(PluginResult.Status.OK, json);
         result.setKeepCallback(true);
         mCallbackContext.sendPluginResult(result);
     }
 
     @Override
-    public void onError(BCLError bclError) {
-        Log.d("LocoCordova", "onError:" + bclError.getMessage());
-        JSONObject resultJson = new JSONObject();
+    public void onRegionIn(BCLRegion region) {
+        Log.d("LocoCordova", "onRegionIn:" + region.getName());
+        JSONObject json = new JSONObject();
         try {
-            resultJson.put("eventType", "onError");
-            resultJson.put("message", createSendErrorJson(bclError));
+            json.put("eventType", "onRegionIn");
+            json.put("message", regionToJSONObject(region));
         } catch (JSONException e) {
             e.printStackTrace();
         }
-        PluginResult result = new PluginResult(PluginResult.Status.OK, resultJson.toString());
+        PluginResult result = new PluginResult(PluginResult.Status.OK, json);
+        result.setKeepCallback(true);
+        mCallbackContext.sendPluginResult(result);
+    }
+
+    @Override
+    public void onRegionOut(BCLRegion region) {
+        Log.d("LocoCordova", "onRegionOut:" + region.getName());
+        JSONObject json = new JSONObject();
+        try {
+            json.put("eventType", "onRegionOut");
+            json.put("message", regionToJSONObject(region));
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        PluginResult result = new PluginResult(PluginResult.Status.OK, json);
+        result.setKeepCallback(true);
+        mCallbackContext.sendPluginResult(result);
+    }
+
+    @Override
+    public void onError(BCLError error) {
+        Log.d("LocoCordova", "onError:" + error.getMessage());
+        JSONObject json = new JSONObject();
+        try {
+            json.put("eventType", "onError");
+            json.put("message", errorToJSONObject(error));
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        PluginResult result = new PluginResult(PluginResult.Status.OK, json);
         result.setKeepCallback(true);
         mCallbackContext.sendPluginResult(result);
     }
 
     private boolean hasAllPermissions(String[] permissions) throws JSONException {
-
         for (int i = 0; i < permissions.length; i++){
             String permission = permissions[i];
             if(!cordova.hasPermission(permission)) {
@@ -505,191 +303,151 @@ public class LocoSDK extends CordovaPlugin implements BCLManagerEventListener{
     }
 
     private void initWithApiKey() {
-        mBCLManager = BCLManager.getInstance(cordova.getContext().getApplicationContext());
-        mBCLManager.setListener(this);
-        mBCLManager.initWithApiKey(ApiKey, autoScan);
+        mManager = BCLManager.getInstance(cordova.getContext().getApplicationContext());
+        mManager.setListener(this);
+        mManager.initWithApiKey(mApiKey, mAutoScan);
     }
 
     @Override
     public void onDestroy(){
         Log.d("LocoCordova", "onDestroy:");
-        if (mBCLManager != null) {
-            mBCLManager.terminateService();
+        if (mManager != null) {
+            mManager.terminateService();
         }
     }
 
-    private JSONObject createSendBeaconsJson(ArrayList<BCLBeacon> beacons) {
+    private JSONObject beaconToJSONObject(BCLBeacon beacon) throws JSONException {
+        
+        JSONObject json = new JSONObject();
+        json.put("beaconId", beacon.getBeaconId());
+        json.put("name", beacon.getName());
+        json.put("uuid", beacon.getUuid());
+        json.put("major", beacon.getMajor());
+        json.put("minor", beacon.getMinor());
+        json.put("txPower", beacon.getTxPower());
+        json.put("rssi", beacon.getRssi());
+        json.put("localName", beacon.getLocalName());
+        json.put("moduleId", beacon.getModuleId());
+        json.put("model", beacon.getBeaconModel());
+        json.put("manufacturer", beacon.getBeaconManufacturer());
+        json.put("x", beacon.getBeaconX());
+        json.put("y", beacon.getBeaconY());
+        json.put("height", beacon.getBeaconH());
 
-        ArrayList<HashMap> beaconList = new ArrayList<>();
+        JSONArray actions = new JSONArray();
+        for (BCLAction action : beacon.getActions()) {
+            actions.put(actionToJSONObject(action));
+        }
+        json.put("actions", actions);
+        
+        return json;
+    }
 
-        for (int idx = 0; idx < beacons.size(); idx++) {
-            ArrayList<HashMap> actionsList = new ArrayList<>();
-            HashMap beaconHash = new HashMap<>();
-            BCLBeacon beacon = beacons.get(idx);
-            beaconHash.put("beaconId", beacon.getBeaconId());
-            beaconHash.put("uuid", beacon.getUuid());
-            beaconHash.put("major", beacon.getMajor());
-            beaconHash.put("minor", beacon.getMinor());
+    private JSONObject actionToJSONObject(BCLAction action) throws JSONException {
+        return actionToJSONObject(action, null, null);
+    }
 
+    private JSONObject actionToJSONObject(BCLAction action, String type, Object source) throws JSONException {
+        
+        JSONObject json = new JSONObject();
+        json.put("actionId", action.getActionId());
+        json.put("name", action.getName());
+        json.put("uri", action.getUri());
+        json.put("interval", action.getInterval());
 
-            //Actionの要素
-            for (BCLAction bclAction : beacon.getActions()) {
-                ArrayList<HashMap> paramList = new ArrayList<>();
-                HashMap actionHash = new HashMap();
+        JSONArray params = new JSONArray();
+        for (BCLParam param : action.getParams()) {
+            params.put(paramToJSONObject(param));
+        }
+        json.put("params", params);
 
-                actionHash.put("actionId", bclAction.getActionId());
-                actionHash.put("name", bclAction.getName());
-                actionHash.put("uri", bclAction.getUri());
-                actionHash.put("interval", bclAction.getInterval());
-
-                for (int idx2 = 0; idx2 < bclAction.getParams().size(); idx2++) {
-                    HashMap<String, String> paramHash = new HashMap<>();
-
-                    paramHash.put("key", bclAction.getParams().get(idx2).getKey());
-                    paramHash.put("value", bclAction.getParams().get(idx2).getValue());
-
-                    paramList.add(paramHash);
-                }
-
-                actionHash.put("params", paramList);
-                actionsList.add(actionHash);
-
+        if (type != null) {
+            json.put("type", type);
+            if (source instanceof BCLRegion) {
+                json.put("source", regionToJSONObject((BCLRegion)source));
+            } else if (source instanceof BCLBeacon) {
+                json.put("source", beaconToJSONObject((BCLBeacon)source));
             }
-
-            beaconHash.put("actions", actionsList);
-            beaconHash.put("name", beacon.getName());
-            beaconHash.put("localName", beacon.getLocalName());
-            beaconHash.put("model", beacon.getBeaconModel());
-            beaconHash.put("manufacturer", beacon.getBeaconManufacturer());
-            beaconHash.put("moduleId", beacon.getModuleId());
-            beaconHash.put("x", beacon.getBeaconX());
-            beaconHash.put("y", beacon.getBeaconY());
-            beaconHash.put("height", beacon.getBeaconH());
-            beaconHash.put("rssi", beacon.getRssi());
-            beaconHash.put("txPower", beacon.getTxPower());
-
-            beaconList.add(beaconHash);
         }
-        //Json
-        HashMap beaconMap = new HashMap();
-        beaconMap.put("beacons", beaconList);
-        return new JSONObject(beaconMap);
+        
+        return json;
     }
 
-    private JSONObject createSendActionsJson(BCLAction bclAction, String type, Object source) {
-        ArrayList<HashMap> paramList = new ArrayList<>();
-        HashMap actionHash = new HashMap();
+    private JSONObject regionToJSONObject(BCLRegion region) throws JSONException {
+        
+        JSONObject json = new JSONObject();
+        json.put("regionId", region.getRegionId());
+        json.put("name", region.getName());
+        json.put("type", region.getType());
+        json.put("uuid", region.getUuid());
+        json.put("major", region.getMajor());
+        json.put("minor", region.getMinor());
+        json.put("latitude", region.getLatitude());
+        json.put("longitude", region.getLongitude());
+        json.put("radius", region.getRadius());
 
-        actionHash.put("actionId", bclAction.getActionId());
-        actionHash.put("name", bclAction.getName());
-        actionHash.put("uri", bclAction.getUri());
-        actionHash.put("interval", bclAction.getInterval());
-
-        for (int idx2 = 0; idx2 < bclAction.getParams().size(); idx2++) {
-            HashMap<String, String> paramHash = new HashMap<>();
-            paramHash.put("key", bclAction.getParams().get(idx2).getKey());
-            paramHash.put("value", bclAction.getParams().get(idx2).getValue());
-            paramList.add(paramHash);
+        JSONArray inAction = new JSONArray();
+        for (BCLAction action : region.getInAction()) {
+            inAction.put(actionToJSONObject(action));
         }
+        json.put("inAction", inAction);
 
-        actionHash.put("params", paramList);
-        actionHash.put("type", type);
-        if (source instanceof BCLRegion) {
-            actionHash.put("source", createSendRegionJson((BCLRegion)source));
-        } else if(source instanceof BCLBeacon) {
-            ArrayList<BCLBeacon> beaconArrayList = new ArrayList<>();
-            beaconArrayList.add((BCLBeacon)source);
-            actionHash.put("source", createSendBeaconsJson(beaconArrayList));
+        JSONArray outAction = new JSONArray();
+        for (BCLAction action : region.getOutAction()) {
+            outAction.put(actionToJSONObject(action));
         }
-        return new JSONObject(actionHash);
+        json.put("outAction", outAction);
 
-
+        return json;
     }
 
-    private JSONObject createSendRegionJson(BCLRegion bclRegion) {
-        ArrayList<HashMap> inActionsList = new ArrayList<>();
-        ArrayList<HashMap> outActionsList = new ArrayList<>();
-        HashMap regionHash = new HashMap();
-
-        regionHash.put("regionId", bclRegion.getRegionId());
-        regionHash.put("type", bclRegion.getType());
-        regionHash.put("name", bclRegion.getName());
-        regionHash.put("uuid", bclRegion.getUuid());
-        regionHash.put("major", bclRegion.getMajor());
-        regionHash.put("minor", bclRegion.getMinor());
-        regionHash.put("latitude", bclRegion.getLatitude());
-        regionHash.put("longitude", bclRegion.getLongitude());
-        regionHash.put("radius", bclRegion.getRadius());
-
-        //inActionの要素
-        for (BCLAction bclAction : bclRegion.getInAction()) {
-            ArrayList<HashMap> paramList = new ArrayList<>();
-            HashMap actionHash = new HashMap();
-
-            actionHash.put("actionId", bclAction.getActionId());
-            actionHash.put("name", bclAction.getName());
-            actionHash.put("uri", bclAction.getUri());
-            actionHash.put("interval", bclAction.getInterval());
-
-            for (int idx2 = 0; idx2 < bclAction.getParams().size(); idx2++) {
-                HashMap<String, String> paramHash = new HashMap<>();
-                paramHash.put("key", bclAction.getParams().get(idx2).getKey());
-                paramHash.put("value", bclAction.getParams().get(idx2).getValue());
-                paramList.add(paramHash);
-            }
-
-            actionHash.put("params", paramList);
-            inActionsList.add(actionHash);
-
+    private JSONObject clusterToJSONObject(BCLCluster cluster) throws JSONException {
+        
+        JSONObject json = new JSONObject();        
+        json.put("clusterId", cluster.getClusterId());
+        json.put("parentId", cluster.getParentId());
+        json.put("name", cluster.getName());
+        json.put("tag", cluster.getType());
+        json.put("image", cluster.getImage());
+        
+        JSONArray beacons = new JSONArray();
+        for (BCLBeacon beacon : cluster.getBeacons()) {
+            beacons.put(beaconToJSONObject(beacon));
         }
-        regionHash.put("inAction", inActionsList);
+        json.put("beacons", beacons);
 
-        //outActionの要素
-        for (BCLAction bclAction : bclRegion.getOutAction()) {
-            ArrayList<HashMap> paramList = new ArrayList<>();
-            HashMap actionHash = new HashMap();
-            actionHash.put("actionId", bclAction.getActionId());
-            actionHash.put("name", bclAction.getName());
-            actionHash.put("uri", bclAction.getUri());
-            actionHash.put("interval", bclAction.getInterval());
-
-            for (int idx2 = 0; idx2 < bclAction.getParams().size(); idx2++) {
-                HashMap<String, String> paramHash = new HashMap<>();
-                paramHash.put("key", bclAction.getParams().get(idx2).getKey());
-                paramHash.put("value", bclAction.getParams().get(idx2).getValue());
-                paramList.add(paramHash);
-            }
-            actionHash.put("params", paramList);
-            outActionsList.add(actionHash);
-        }
-        regionHash.put("outAction", outActionsList);
-
-        return new JSONObject(regionHash);
+        return json;
     }
 
-    private JSONObject createSendErrorJson(BCLError bclError) {
-        JSONObject jsonObject = new JSONObject();
-        try {
-            jsonObject.put("code", bclError.getCode());
-            jsonObject.put("message", bclError.getMessage());
-            if (bclError.getDetail() != null) {
-                jsonObject.put("detail", bclError.getDetail().getMessage());
-            } else {
-                jsonObject.put("detail", null);
-            }
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-        return jsonObject;
+    private JSONObject paramToJSONObject(BCLParam param) throws JSONException {
+        
+        JSONObject json = new JSONObject();
+        json.put("key", param.getKey());
+        json.put("value", param.getValue());
+        
+        return json;
     }
 
-    private JSONObject createSendStateJson(BCLState bclState) {
-        JSONObject jsonObject = new JSONObject();
-        try {
-            jsonObject.put("status", bclState.toString());
-        } catch (JSONException e) {
-            e.printStackTrace();
+    private JSONObject errorToJSONObject(BCLError error) throws JSONException {
+        
+        JSONObject json = new JSONObject();
+        json.put("code", error.getCode());
+        json.put("message", error.getMessage());
+        if (error.getDetail() != null) {
+            json.put("detail", error.getDetail().getMessage());
+        } else {
+            json.put("detail", null);
         }
-        return jsonObject;
+        
+        return json;
     }
+
+    private JSONObject stateToJSONObject(BCLState state) throws JSONException {
+        
+        JSONObject json = new JSONObject();
+        json.put("status", state.toString());
+        
+        return json;
+    }
+    
 }

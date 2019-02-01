@@ -15,7 +15,7 @@
     self.callbackId = command.callbackId;
 
     NSString *apiKey = [command.arguments objectAtIndex:0];
-    bool autoScan = [[command.arguments objectAtIndex:1]boolValue];
+    BOOL autoScan = [[command.arguments objectAtIndex:1] boolValue];
 
     BCLManager *manager = [BCLManager sharedManager];
     manager.delegate = self;
@@ -25,36 +25,34 @@
     }
 }
 	
--(void)scanStart:(CDVInvokedUrlCommand *)command {
+- (void)scanStart:(CDVInvokedUrlCommand *)command {
     NSLog(@"%s", __FUNCTION__);
     [[BCLManager sharedManager] scanStart];
 }
 
--(void)scanStop:(CDVInvokedUrlCommand *)command {
+- (void)scanStop:(CDVInvokedUrlCommand *)command {
     NSLog(@"%s", __FUNCTION__);
     [[BCLManager sharedManager] scanStop];
 }
 
--(void)getDeviceId:(CDVInvokedUrlCommand *)command {
+- (void)getDeviceId:(CDVInvokedUrlCommand *)command {
     NSLog(@"%s", __FUNCTION__);
-    NSString *str = [NSString string];
-    str = [[BCLManager sharedManager] getDeviceId];
+    NSString *str = [[BCLManager sharedManager] getDeviceId];
     CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:str];
     [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
 }
 
--(void)getNearestBeaconId:(CDVInvokedUrlCommand *)command {
+- (void)getNearestBeaconId:(CDVInvokedUrlCommand *)command {
     NSLog(@"%s", __FUNCTION__);
-    NSString *str = [NSString string];
-    str = [[BCLManager sharedManager] getNearestBeaconId];
+    NSString *str = [[BCLManager sharedManager] getNearestBeaconId];
     CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:str];
     [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
 }
 
--(void)getState:(CDVInvokedUrlCommand *)command {
+- (void)getState:(CDVInvokedUrlCommand *)command {
     NSLog(@"%s", __FUNCTION__);
     BCLState status = [[BCLManager sharedManager] state];
-    NSString *str = @"";
+    NSString *str;
     switch (status) {
         case BCLStateUninitialized:
             str = @"Uninitialized";
@@ -79,81 +77,59 @@
     [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
 }
 
--(void)getBeacons:(CDVInvokedUrlCommand *)command {
+- (void)getBeacons:(CDVInvokedUrlCommand *)command {
     NSLog(@"%s", __FUNCTION__);
     NSMutableArray *marray = [NSMutableArray array];
     NSArray *beacons = [[BCLManager sharedManager] getBeacons];
-    if (beacons && beacons.count > 0) {
-        for (BCLBeacon *beacon in beacons) {
-            [marray addObject:[CDVBeacrewLoco beaconToDictionary:beacon]];
-        }
+    for (BCLBeacon *beacon in beacons) {
+        [marray addObject:[CDVBeacrewLoco beaconToDictionary:beacon]];
     }
-    
     NSMutableDictionary *mdic = [NSMutableDictionary dictionary];
     mdic[@"beacons"] = marray;
-    NSData *jsonData = [NSJSONSerialization dataWithJSONObject:mdic options:kNilOptions error:nil];
-    NSString *jsonString = [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding];
-    NSLog(@"%@", jsonString);
-    CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:jsonString];
+    CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:mdic];
     [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
 }
--(void)getClusters:(CDVInvokedUrlCommand *)command {
+
+- (void)getClusters:(CDVInvokedUrlCommand *)command {
     NSLog(@"%s", __FUNCTION__);
     NSMutableArray *marray = [NSMutableArray array];
     NSArray *clusters = [[BCLManager sharedManager] getClusters];
-    if (clusters && clusters.count > 0) {
-        for (BCLCluster *cluster in clusters) {
-            [marray addObject:[CDVBeacrewLoco clusterToDictionary:cluster]];
-        }
+    for (BCLCluster *cluster in clusters) {
+        [marray addObject:[CDVBeacrewLoco clusterToDictionary:cluster]];
     }
     NSMutableDictionary *mdic = [NSMutableDictionary dictionary];
     mdic[@"clusters"] = marray;
-    NSData *jsonData = [NSJSONSerialization dataWithJSONObject:mdic options:kNilOptions error:nil];
-    NSString *jsonString = [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding];
-    NSLog(@"%@", jsonString);
-    CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:jsonString];
+    CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:mdic];
     [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
-
 }
 
--(void)getRegions:(CDVInvokedUrlCommand *)command {
+- (void)getRegions:(CDVInvokedUrlCommand *)command {
     NSLog(@"%s", __FUNCTION__);
     NSMutableArray *marray = [NSMutableArray array];
     NSArray *regions = [[BCLManager sharedManager] getRegions];
-    if (regions && regions.count > 0) {
-        for (BCLRegion *region in regions) {
-            [marray addObject:[CDVBeacrewLoco regionToDictionary:region]];
-        }
+    for (BCLRegion *region in regions) {
+        [marray addObject:[CDVBeacrewLoco regionToDictionary:region]];
     }
     NSMutableDictionary *mdic = [NSMutableDictionary dictionary];
     mdic[@"regions"] = marray;
-    NSData *jsonData = [NSJSONSerialization dataWithJSONObject:mdic options:kNilOptions error:nil];
-    NSString *jsonString = [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding];
-    NSLog(@"%@", jsonString);
-    CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:jsonString];
+    CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:mdic];
     [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
-
 }
 
--(void)getActions:(CDVInvokedUrlCommand *)command {
+- (void)getActions:(CDVInvokedUrlCommand *)command {
     NSLog(@"%s", __FUNCTION__);
     NSMutableArray *marray = [NSMutableArray array];
     NSArray *actions = [[BCLManager sharedManager] getActions];
-    if (actions && actions.count > 0) {
-        for (BCLAction *action in actions) {
-            [marray addObject:[CDVBeacrewLoco actionToDictionary:action type:nil source:nil]];
-        }
+    for (BCLAction *action in actions) {
+        [marray addObject:[CDVBeacrewLoco actionToDictionary:action type:nil source:nil]];
     }
     NSMutableDictionary *mdic = [NSMutableDictionary dictionary];
     mdic[@"actions"] = marray;
-    NSData *jsonData = [NSJSONSerialization dataWithJSONObject:mdic options:kNilOptions error:nil];
-    NSString *jsonString = [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding];
-    NSLog(@"%@", jsonString);
-    CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:jsonString];
+    CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:mdic];
     [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
 }
 
--(void)addEventLog:(CDVInvokedUrlCommand *)command {
+- (void)addEventLog:(CDVInvokedUrlCommand *)command {
     NSLog(@"%s", __FUNCTION__);
     [[BCLManager sharedManager] addEventLog:([command.arguments objectAtIndex:0]) value:([command.arguments objectAtIndex:1])];
 }
@@ -274,15 +250,9 @@
         [marray addObject:[CDVBeacrewLoco beaconToDictionary:beacon]];
     }
     NSMutableDictionary *mdic = [NSMutableDictionary dictionary];
-    NSMutableDictionary *mReturnDic = [NSMutableDictionary dictionary];
-    mReturnDic[@"eventType"] = @"onBeaconDetected";
-    mReturnDic[@"message"] = mdic;
-    mdic[@"beacons"] = marray;
-    NSData *jsonData = [NSJSONSerialization dataWithJSONObject:mReturnDic options:kNilOptions error:nil];
-    NSString *jsonString = [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding];
-    NSLog(@"%@", jsonString);
-    
-    CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:jsonString];
+    mdic[@"eventType"] = @"onBeaconDetected";
+    mdic[@"message"] = @{@"beacons":marray};
+    CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:mdic];
     pluginResult.keepCallback = @YES;
     [self.commandDelegate sendPluginResult:pluginResult callbackId:self.callbackId];
 }
@@ -291,14 +261,10 @@
     NSLog(@"%s", __FUNCTION__);
     
     NSDictionary *dic = [CDVBeacrewLoco regionToDictionary:region];
-    NSMutableDictionary *mReturnDic = [NSMutableDictionary dictionary];
-    mReturnDic[@"eventType"] = @"onRegionIn";
-    mReturnDic[@"message"] = dic;
-    NSData *jsonData = [NSJSONSerialization dataWithJSONObject:mReturnDic options:kNilOptions error:nil];
-    NSString *jsonString = [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding];
-    NSLog(@"%@", jsonString);
-    
-    CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:jsonString];
+    NSMutableDictionary *mdic = [NSMutableDictionary dictionary];
+    mdic[@"eventType"] = @"onRegionIn";
+    mdic[@"message"] = dic;
+    CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:mdic];
     pluginResult.keepCallback = @YES;
     [self.commandDelegate sendPluginResult:pluginResult callbackId:self.callbackId];
 }
@@ -307,30 +273,22 @@
     NSLog(@"%s", __FUNCTION__);
     
     NSDictionary *dic = [CDVBeacrewLoco regionToDictionary:region];
-    NSMutableDictionary *mReturnDic = [NSMutableDictionary dictionary];
-    mReturnDic[@"eventType"] = @"onRegionOut";
-    mReturnDic[@"message"] = dic;
-    NSData *jsonData = [NSJSONSerialization dataWithJSONObject:mReturnDic options:kNilOptions error:nil];
-    NSString *jsonString = [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding];
-    NSLog(@"%@", jsonString);
-    
-    CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:jsonString];
+    NSMutableDictionary *mdic = [NSMutableDictionary dictionary];
+    mdic[@"eventType"] = @"onRegionOut";
+    mdic[@"message"] = dic;
+    CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:mdic];
     pluginResult.keepCallback = @YES;
     [self.commandDelegate sendPluginResult:pluginResult callbackId:self.callbackId];
 }
-   
+
 - (void)didActionCalled:(BCLAction *)action type:(NSString *)type source:(id)source {
     NSLog(@"%s", __FUNCTION__);
     
     NSDictionary *dic = [CDVBeacrewLoco actionToDictionary:action type:type source:source];
-    NSMutableDictionary *mReturnDic = [NSMutableDictionary dictionary];
-    mReturnDic[@"eventType"] = @"onActionDetected";
-    mReturnDic[@"message"] = dic;
-    NSData *jsonData = [NSJSONSerialization dataWithJSONObject:mReturnDic options:kNilOptions error:nil];
-    NSString *jsonString = [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding];
-    NSLog(@"%@", jsonString);
-    
-    CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:jsonString];
+    NSMutableDictionary *mdic = [NSMutableDictionary dictionary];
+    mdic[@"eventType"] = @"onActionDetected";
+    mdic[@"message"] = dic;
+    CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:mdic];
     pluginResult.keepCallback = @YES;
     [self.commandDelegate sendPluginResult:pluginResult callbackId:self.callbackId];
 }
@@ -339,14 +297,10 @@
     NSLog(@"%s", __FUNCTION__);
     
     NSDictionary *dic = [CDVBeacrewLoco errorToDictionary:error];
-    NSMutableDictionary *mRetunDic = [NSMutableDictionary dictionary];
-    mRetunDic[@"eventType"] = @"onError";
-    mRetunDic[@"message"] = dic;
-    NSData *jsonData = [NSJSONSerialization dataWithJSONObject:mRetunDic options:kNilOptions error:nil];
-    NSString *jsonString = [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding];
-    NSLog(@"%@", jsonString);
-    
-    CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:jsonString];
+    NSMutableDictionary *mdic = [NSMutableDictionary dictionary];
+    mdic[@"eventType"] = @"onError";
+    mdic[@"message"] = dic;
+    CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:mdic];
     pluginResult.keepCallback = @YES;
     [self.commandDelegate sendPluginResult:pluginResult callbackId:self.callbackId];
 }
@@ -376,15 +330,9 @@
             break;
     }
     NSMutableDictionary *mdic = [NSMutableDictionary dictionary];
-    NSMutableDictionary *mReturnDic = [NSMutableDictionary dictionary];
-    mReturnDic[@"eventType"] = @"onStateChange";
-    mdic[@"status"] = initState;
-    mReturnDic[@"message"] = mdic;
-    NSData *jsonData = [NSJSONSerialization dataWithJSONObject:mReturnDic options:kNilOptions error:nil];
-    NSString *jsonString = [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding];
-    NSLog(@"%@", jsonString);
-    
-    CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:jsonString];
+    mdic[@"eventType"] = @"onStateChange";
+    mdic[@"message"] = @{@"status":initState};
+    CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:mdic];
     pluginResult.keepCallback = @YES;
     [self.commandDelegate sendPluginResult:pluginResult callbackId:self.callbackId];
 }
