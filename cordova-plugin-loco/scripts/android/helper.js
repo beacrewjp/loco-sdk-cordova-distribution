@@ -24,7 +24,7 @@ function addDependencies(buildGradle) {
   
   
   // modify the line to add the necessary dependencies
-  var realmDependency = whitespace + 'classpath \'io.realm:realm-gradle-plugin:2.3.2\'';
+  var realmDependency = whitespace + 'classpath \'io.realm:realm-gradle-plugin:5.7.1\'';
   var modifiedLine = match[0] + '\n' + realmDependency;
   
   // modify the actual line

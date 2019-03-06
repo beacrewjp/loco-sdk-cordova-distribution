@@ -8,7 +8,7 @@ repositories {
 dependencies {
     
     implementation 'jp.beacrew:loco:2.2.0@aar'
-    implementation('org.altbeacon:android-beacon-library:2.15') {
+    implementation('org.altbeacon:android-beacon-library:2.15.2') {
         exclude module: 'support-v4'
     }
     implementation('com.squareup.okhttp3:okhttp:3.9.0') {
