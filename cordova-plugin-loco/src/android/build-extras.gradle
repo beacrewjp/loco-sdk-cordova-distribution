@@ -7,7 +7,7 @@ repositories {
 
 dependencies {
     
-    implementation 'jp.beacrew:loco:2.2.0@aar'
+    implementation 'jp.beacrew:loco:2.3.0@aar'
     implementation('org.altbeacon:android-beacon-library:2.15.2') {
         exclude module: 'support-v4'
     }
