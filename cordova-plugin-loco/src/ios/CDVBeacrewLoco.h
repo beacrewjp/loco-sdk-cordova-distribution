@@ -23,4 +23,5 @@
 - (void)getRegions:(CDVInvokedUrlCommand *)command;
 - (void)getActions:(CDVInvokedUrlCommand *)command;
 - (void)addEventLog:(CDVInvokedUrlCommand *)command;
+- (void)addDeviceLog:(CDVInvokedUrlCommand *)command;
 @end

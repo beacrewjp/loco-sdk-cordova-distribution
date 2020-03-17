@@ -134,6 +134,11 @@
     [[BCLManager sharedManager] addEventLog:([command.arguments objectAtIndex:0]) value:([command.arguments objectAtIndex:1])];
 }
 
+- (void)addDeviceLog:(CDVInvokedUrlCommand *)command {
+    NSLog(@"%s", __FUNCTION__);
+    [[BCLManager sharedManager] addDeviceLog:([command.arguments objectAtIndex:0])];
+}
+
 + (NSDictionary *)beaconToDictionary:(BCLBeacon *)beacon {
 	NSMutableDictionary *beaconDictionary = [NSMutableDictionary dictionary];
     beaconDictionary[@"beaconId"] = beacon.beaconId;

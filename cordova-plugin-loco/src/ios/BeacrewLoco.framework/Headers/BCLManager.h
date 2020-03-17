@@ -146,10 +146,26 @@ typedef NS_ENUM(NSUInteger, BCLState) {
 - (NSArray<BCLRegion *> *)getRegions;
 
 /**
+ システムから取得した登録リージョンを指定した条件で絞り込んだリストを取得します。
+ 条件にはNSDictionaryへkeyにBCLRegionのメンバ名、valueに絞り込みたい値を文字列で設定して下さい。複数設定する事も可能です。
+ @param condition 絞り込み条件
+ @return 絞り込みを行なった登録リージョンのリスト
+ */
+- (NSArray<BCLRegion *> *)getRegionByCondition:(NSDictionary *)condition;
+
+/**
  システムから取得した登録クラスタのリストを取得します。
  @return 登録クラスタリスト
  */
 - (NSArray<BCLCluster *> *)getClusters;
+
+/**
+ システムから取得した登録クラスタを指定した条件で絞り込んだリストを取得します。
+ 条件にはNSDictionaryへkeyにBCLClusterのメンバ名、valueに絞り込みたい値を文字列で設定して下さい。複数設定する事も可能です。
+ @param condition 絞り込み条件
+ @return 絞り込みを行なった登録クラスタのリスト
+ */
+- (NSArray<BCLCluster *> *)getClusterByCondition:(NSDictionary *)condition;
 
 /**
  システムから取得した登録ビーコンのリストを取得します。
@@ -158,10 +174,26 @@ typedef NS_ENUM(NSUInteger, BCLState) {
 - (NSArray<BCLBeacon *> *)getBeacons;
 
 /**
+ システムから取得した登録ビーコンを指定した条件で絞り込んだリストを取得します。
+ 条件にはNSDictionaryへkeyにBCLBeaconのメンバ名、valueに絞り込みたい値を文字列で設定して下さい。複数設定する事も可能です。
+ @param condition 絞り込み条件
+ @return 絞り込みを行なった登録ビーコンのリスト
+ */
+- (NSArray<BCLBeacon *> *)getBeaconByCondition:(NSDictionary *)condition;
+
+/**
  システムから取得した登録アクションのリストを取得します。
  @return 登録アクションリスト
  */
 - (NSArray<BCLAction *> *)getActions;
+
+/**
+ システムから取得した登録アクションを指定した条件で絞り込んだリストを取得します。
+ 条件にはNSDictionaryへkeyにBCLActionのメンバ名、valueに絞り込みたい値を文字列で設定して下さい。複数設定する事も可能です。
+ @param condition 絞り込み条件
+ @return 絞り込みを行なった登録アクションのリスト
+ */
+- (NSArray<BCLAction *> *)getActionByCondition:(NSDictionary *)condition;
 
 /**
  現在の位置から最も近いビーコンのIDを取得します。
@@ -248,6 +280,12 @@ typedef NS_ENUM(NSUInteger, BCLState) {
  @return key、valueに値がセットされていない場合false、それ以外の場合はtrueが返されます。
  */
 - (BOOL)addEventLog:(NSString *)key value:(NSString *)value;
+
+/**
+ デバイスログを追加します。
+ @param metadata デバイスログに付加するメタデータ
+ */
+- (void)addDeviceLog:(NSString *)metadata;
 
 @end
 
